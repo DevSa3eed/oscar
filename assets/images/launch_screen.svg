@@ -1,0 +1,50 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#FFA500;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FF8C00;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="backgroundGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#16213e;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1024" height="1024" fill="url(#backgroundGradient)"/>
+  
+  <!-- Large Oscar statue for launch screen -->
+  <g transform="translate(512, 512)">
+    <!-- Base/Pedestal -->
+    <rect x="-200" y="300" width="400" height="80" rx="15" fill="url(#goldGradient)"/>
+    
+    <!-- Statue body -->
+    <ellipse cx="0" cy="120" rx="100" ry="200" fill="url(#goldGradient)"/>
+    
+    <!-- Head -->
+    <circle cx="0" cy="-60" r="75" fill="url(#goldGradient)"/>
+    
+    <!-- Crown -->
+    <path d="M-60,-140 L-40,-160 L-20,-140 L0,-160 L20,-140 L40,-140 L30,-120 L20,-120 L15,-110 L5,-110 L0,-120 L-5,-110 L-15,-110 L-20,-120 L-30,-120 Z" fill="url(#goldGradient)"/>
+    
+    <!-- Arms -->
+    <ellipse cx="-130" cy="40" rx="40" ry="100" fill="url(#goldGradient)" transform="rotate(-20 -130 40)"/>
+    <ellipse cx="130" cy="40" rx="40" ry="100" fill="url(#goldGradient)" transform="rotate(20 130 40)"/>
+    
+    <!-- Sword -->
+    <rect x="-8" y="-200" width="16" height="300" fill="url(#goldGradient)"/>
+    <rect x="-25" y="-200" width="50" height="20" rx="8" fill="url(#goldGradient)"/>
+    
+    <!-- App name -->
+    <text x="0" y="450" text-anchor="middle" font-family="Arial, sans-serif" font-size="72" font-weight="bold" fill="url(#goldGradient)">OSCAR</text>
+  </g>
+  
+  <!-- Decorative stars -->
+  <g fill="url(#goldGradient)" opacity="0.6">
+    <polygon points="150,100 165,125 190,125 170,145 180,170 150,155 120,170 130,145 110,125 135,125" />
+    <polygon points="850,150 865,175 890,175 870,195 880,220 850,205 820,220 830,195 810,175 835,175" />
+    <polygon points="100,850 115,875 140,875 120,895 130,920 100,905 70,920 80,895 60,875 85,875" />
+    <polygon points="900,800 915,825 940,825 920,845 930,870 900,855 870,870 880,845 860,825 885,825" />
+  </g>
+</svg>

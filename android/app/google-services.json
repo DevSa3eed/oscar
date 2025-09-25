@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "408160611859",
+    "project_id": "oscar-duty-app",
+    "storage_bucket": "oscar-duty-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:408160611859:android:651399feddb481994419e6",
+        "android_client_info": {
+          "package_name": "com.example.oscar"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZe7CApMa8kW2xHAXXe6lb6w1sE0bZcoE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:408160611859:android:f409f63e74698c844419e6",
+        "android_client_info": {
+          "package_name": "com.sa3eed.oscar"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZe7CApMa8kW2xHAXXe6lb6w1sE0bZcoE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
