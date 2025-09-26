@@ -54,6 +54,7 @@ class AppNavigation extends ConsumerWidget {
     if (route.contains('profile')) return 'Profile';
     if (route.contains('hod-dashboard')) return 'HOD Dashboard';
     if (route.contains('duty-assignment')) return 'Duty Assignments';
+    if (route.contains('location-management')) return 'Location Management';
     if (route.contains('reports')) return 'Reports';
     if (route.contains('reminder-email')) return 'Send Reminders';
     if (route.contains('duty-check')) return 'Duty Check';
@@ -216,6 +217,11 @@ class AppNavigation extends ConsumerWidget {
           route: const DutyAssignmentRoute(),
         ),
         BottomNavItem(
+          icon: Icons.location_on,
+          label: 'Locations',
+          route: const LocationManagementRoute(),
+        ),
+        BottomNavItem(
           icon: Icons.assessment,
           label: 'Reports',
           route: const ReportsRoute(),
@@ -237,8 +243,9 @@ class AppNavigation extends ConsumerWidget {
     } else {
       if (currentRoute.contains('hod-dashboard')) return 0;
       if (currentRoute.contains('duty-assignment')) return 1;
-      if (currentRoute.contains('reports')) return 2;
-      if (currentRoute.contains('profile')) return 3;
+      if (currentRoute.contains('location-management')) return 2;
+      if (currentRoute.contains('reports')) return 3;
+      if (currentRoute.contains('profile')) return 4;
       return 0; // Default to dashboard
     }
   }

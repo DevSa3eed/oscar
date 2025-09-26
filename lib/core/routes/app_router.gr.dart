@@ -90,6 +90,22 @@ class HodDashboardRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [LocationManagementPage]
+class LocationManagementRoute extends PageRouteInfo<void> {
+  const LocationManagementRoute({List<PageRouteInfo>? children})
+    : super(LocationManagementRoute.name, initialChildren: children);
+
+  static const String name = 'LocationManagementRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const LocationManagementPage();
+    },
+  );
+}
+
+/// generated route for
 /// [LoginPage]
 class LoginRoute extends PageRouteInfo<void> {
   const LoginRoute({List<PageRouteInfo>? children})

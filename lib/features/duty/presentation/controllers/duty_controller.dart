@@ -125,6 +125,9 @@ class DutyController extends _$DutyController {
       );
       if (!ref.mounted) return;
 
+      final locationsResult = await _dutyRepository.getLocations();
+      if (!ref.mounted) return;
+
       dutyPersonsResult.when(
         success: (dutyPersons) {
           if (!ref.mounted) return;
@@ -159,6 +162,17 @@ class DutyController extends _$DutyController {
           state = state.copyWith(errorMessage: _getErrorMessage(failure));
         },
       );
+
+      locationsResult.when(
+        success: (locations) {
+          if (!ref.mounted) return;
+          state = state.copyWith(locations: locations);
+        },
+        failure: (failure) {
+          if (!ref.mounted) return;
+          state = state.copyWith(errorMessage: _getErrorMessage(failure));
+        },
+      );
     } catch (e) {
       if (!ref.mounted) return;
       state = state.copyWith(errorMessage: 'Failed to load duty data: $e');
@@ -178,9 +192,10 @@ class DutyController extends _$DutyController {
     if (!ref.mounted) return;
 
     result.when(
-      success: (_) {
+      success: (_) async {
         if (!ref.mounted) return;
-        loadDutyData(); // Refresh data
+        // Wait for data refresh to complete
+        await loadDutyData();
       },
       failure: (failure) {
         if (!ref.mounted) return;
@@ -488,6 +503,114 @@ class DutyController extends _$DutyController {
       state = state.copyWith(
         isLoading: false,
         errorMessage: 'Failed to update duty person assignment: $e',
+      );
+    }
+  }
+
+  // Location Management Methods
+  Future<void> addLocation({
+    required String name,
+    required String type,
+    String? description,
+  }) async {
+    if (!ref.mounted) return;
+    state = state.copyWith(isLoading: true, errorMessage: null);
+
+    try {
+      final location = Location(
+        id: 'loc_${DateTime.now().millisecondsSinceEpoch}',
+        name: name,
+        type: type,
+        description: description,
+        isActive: true,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      final result = await _dutyRepository.saveLocation(location);
+      if (!ref.mounted) return;
+
+      result.when(
+        success: (_) {
+          if (!ref.mounted) return;
+          loadLocations(); // Refresh locations
+          state = state.copyWith(isLoading: false);
+        },
+        failure: (failure) {
+          if (!ref.mounted) return;
+          state = state.copyWith(
+            isLoading: false,
+            errorMessage: _getErrorMessage(failure),
+          );
+        },
+      );
+    } catch (e) {
+      if (!ref.mounted) return;
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: 'Failed to add location: $e',
+      );
+    }
+  }
+
+  Future<void> updateLocation(Location updatedLocation) async {
+    if (!ref.mounted) return;
+    state = state.copyWith(isLoading: true, errorMessage: null);
+
+    try {
+      final result = await _dutyRepository.saveLocation(updatedLocation);
+      if (!ref.mounted) return;
+
+      result.when(
+        success: (_) {
+          if (!ref.mounted) return;
+          loadLocations(); // Refresh locations
+          state = state.copyWith(isLoading: false);
+        },
+        failure: (failure) {
+          if (!ref.mounted) return;
+          state = state.copyWith(
+            isLoading: false,
+            errorMessage: _getErrorMessage(failure),
+          );
+        },
+      );
+    } catch (e) {
+      if (!ref.mounted) return;
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: 'Failed to update location: $e',
+      );
+    }
+  }
+
+  Future<void> deleteLocation(String locationId) async {
+    if (!ref.mounted) return;
+    state = state.copyWith(isLoading: true, errorMessage: null);
+
+    try {
+      final result = await _dutyRepository.deleteLocation(locationId);
+      if (!ref.mounted) return;
+
+      result.when(
+        success: (_) {
+          if (!ref.mounted) return;
+          loadLocations(); // Refresh locations
+          state = state.copyWith(isLoading: false);
+        },
+        failure: (failure) {
+          if (!ref.mounted) return;
+          state = state.copyWith(
+            isLoading: false,
+            errorMessage: _getErrorMessage(failure),
+          );
+        },
+      );
+    } catch (e) {
+      if (!ref.mounted) return;
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: 'Failed to delete location: $e',
       );
     }
   }

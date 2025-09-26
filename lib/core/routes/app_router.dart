@@ -6,6 +6,7 @@ import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/duty/presentation/pages/supervisor_home_page.dart';
 import '../../features/duty/presentation/pages/duty_check_page.dart';
 import '../../features/duty/presentation/pages/duty_assignment_page.dart';
+import '../../features/duty/presentation/pages/location_management_page.dart';
 import '../../features/reports/presentation/pages/hod_dashboard_page.dart';
 import '../../features/reports/presentation/pages/reports_page.dart';
 import '../../features/reports/presentation/pages/reminder_email_page.dart';
@@ -48,6 +49,11 @@ class AppRouter extends RootStackRouter {
     AutoRoute(
       page: DutyAssignmentRoute.page,
       path: '/duty-assignment',
+      guards: [AuthGuard()],
+    ),
+    AutoRoute(
+      page: LocationManagementRoute.page,
+      path: '/location-management',
       guards: [AuthGuard()],
     ),
     AutoRoute(page: ReportsRoute.page, path: '/reports', guards: [AuthGuard()]),

@@ -23,6 +23,17 @@ class _SupervisorHomePageState extends ConsumerState<SupervisorHomePage> {
   final String _selectedLocationType = 'All';
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh data when returning to this page
+    if (_isInitialized) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(dutyControllerProvider.notifier).loadDutyData();
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final dutyState = ref.watch(dutyControllerProvider);
 
@@ -468,21 +479,31 @@ class _SupervisorHomePageState extends ConsumerState<SupervisorHomePage> {
             padding: const EdgeInsets.all(8),
             child: Column(
               children: dutyPersons.map((dutyPerson) {
-                final dutyCheck = dutyChecks.firstWhere(
-                  (check) => check.dutyPersonId == dutyPerson.id,
-                  orElse: () => DutyCheck(
-                    id: '',
-                    dutyPersonId: dutyPerson.id,
-                    dutyPersonName: dutyPerson.name,
-                    dutyPersonRole: dutyPerson.role,
-                    checkDate: DateTime.now(),
-                    status: 'absent',
-                    isOnPhone: false,
-                    isWearingVest: false,
-                    checkedBy: '',
-                    checkedByName: '',
-                  ),
-                );
+                // Find existing duty check for this person
+                final existingCheck =
+                    dutyChecks
+                        .where((check) => check.dutyPersonId == dutyPerson.id)
+                        .isNotEmpty
+                    ? dutyChecks.firstWhere(
+                        (check) => check.dutyPersonId == dutyPerson.id,
+                      )
+                    : null;
+
+                // Create default absent check only if no check exists
+                final dutyCheck =
+                    existingCheck ??
+                    DutyCheck(
+                      id: '',
+                      dutyPersonId: dutyPerson.id,
+                      dutyPersonName: dutyPerson.name,
+                      dutyPersonRole: dutyPerson.role,
+                      checkDate: DateTime.now(),
+                      status: 'absent',
+                      isOnPhone: false,
+                      isWearingVest: false,
+                      checkedBy: '',
+                      checkedByName: '',
+                    );
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 8),
