@@ -93,15 +93,6 @@ class MicrosoftActionCard extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                if (subtitle != null && subtitle!.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle!,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
-                  ),
-                ],
               ],
             ),
           ),

@@ -115,6 +115,7 @@ void main() async {
     );
   }
 
+  print('🚀 [MAIN] Starting app with ProviderScope...');
   runApp(const ProviderScope(child: DutyApp()));
 }
 
@@ -123,15 +124,24 @@ class DutyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print('🏗️ [MAIN] Building DutyApp MaterialApp.router...');
     return MaterialApp.router(
       title: 'Oscar Duty App',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.light,
-      routerConfig: AppRouter().config(),
+      routerConfig: (() {
+        print('🔧 [MAIN] Creating AppRouter config...');
+        final config = AppRouter().config();
+        print('🔧 [MAIN] AppRouter config created successfully');
+        return config;
+      })(),
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
-        return AuthWrapper(child: child!);
+        print(
+          '🏗️ [MAIN] MaterialApp builder called with child: ${child != null ? "not null" : "null"}',
+        );
+        return AuthWrapper(child: child ?? const SizedBox.shrink());
       },
     );
   }

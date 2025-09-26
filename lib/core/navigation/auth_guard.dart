@@ -19,6 +19,9 @@ class AuthWrapper extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    print(
+      '🔐 [AUTH_WRAPPER] Building AuthWrapper with child: ${child != null ? "not null" : "null"}',
+    );
     // Simply return the child - let the splash page and router handle navigation
     return child;
   }

@@ -119,6 +119,56 @@ class FirestoreReportsDataSourceImpl implements FirestoreReportsDataSource {
           ? ((checkedPersons - totalIssues) / checkedPersons * 100).round()
           : 0;
 
+      // Generate issues from duty checks with violations
+      final issues = <DutyIssueModel>[];
+      for (final check in dutyChecks) {
+        final personIssues = <String>[];
+
+        if (check.isOnPhone) {
+          personIssues.add('Using phone during duty');
+        }
+        if (!check.isWearingVest) {
+          personIssues.add('Not wearing safety vest');
+        }
+        if (!check.isOnTime) {
+          personIssues.add('Late arrival');
+        }
+
+        if (personIssues.isNotEmpty) {
+          issues.add(
+            DutyIssueModel(
+              dutyPersonId: check.dutyPersonId,
+              dutyPersonName: check.dutyPersonName,
+              dutyPersonRole: check.dutyPersonRole,
+              dutyPersonEmail: '', // Will be populated from duty persons data
+              issues: personIssues,
+              checkDate: check.checkDate,
+              checkedBy: check.checkedBy,
+            ),
+          );
+        }
+      }
+
+      // Populate email addresses for issues
+      for (final issue in issues) {
+        final dutyPerson = dutyPersons.firstWhere(
+          (person) => person.id == issue.dutyPersonId,
+          orElse: () =>
+              throw Exception('Duty person not found: ${issue.dutyPersonId}'),
+        );
+        // Update the issue with the correct email
+        final issueIndex = issues.indexOf(issue);
+        issues[issueIndex] = DutyIssueModel(
+          dutyPersonId: issue.dutyPersonId,
+          dutyPersonName: issue.dutyPersonName,
+          dutyPersonRole: issue.dutyPersonRole,
+          dutyPersonEmail: dutyPerson.email,
+          issues: issue.issues,
+          checkDate: issue.checkDate,
+          checkedBy: issue.checkedBy,
+        );
+      }
+
       final report = DutyReportModel(
         id: '',
         reportDate: today,
@@ -127,7 +177,7 @@ class FirestoreReportsDataSourceImpl implements FirestoreReportsDataSource {
         absentCount: absentPersons,
         issuesCount: totalIssues,
         compliancePercentage: compliancePercentage.toDouble(),
-        issues: [], // TODO: Populate with actual issues
+        issues: issues,
         generatedBy: 'system',
         createdAt: DateTime.now(),
       );

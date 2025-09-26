@@ -33,6 +33,35 @@ android {
         multiDexEnabled = true
     }
 
+    signingConfigs {
+        create("release") {
+            // Use environment variables or gradle.properties for signing
+            // Set these in your local.properties or environment:
+            // OSCAR_KEYSTORE_PATH=/path/to/your/keystore.jks
+            // OSCAR_KEYSTORE_PASSWORD=your_keystore_password
+            // OSCAR_KEY_ALIAS=your_key_alias
+            // OSCAR_KEY_PASSWORD=your_key_password
+            
+            val keystorePath = project.findProperty("OSCAR_KEYSTORE_PATH") as String?
+            val keystorePassword = project.findProperty("OSCAR_KEYSTORE_PASSWORD") as String?
+            val keyAlias = project.findProperty("OSCAR_KEY_ALIAS") as String?
+            val keyPassword = project.findProperty("OSCAR_KEY_PASSWORD") as String?
+            
+            if (keystorePath != null && keystorePassword != null && keyAlias != null && keyPassword != null) {
+                storeFile = file(keystorePath)
+                storePassword = keystorePassword
+                keyAlias = keyAlias
+                keyPassword = keyPassword
+            } else {
+                // Fallback to debug signing if release signing is not configured
+                storeFile = file("debug.keystore")
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
+        }
+    }
+
     buildTypes {
         debug {
             // Optimize debug builds
@@ -41,10 +70,10 @@ android {
             isDebuggable = true
         }
         release {
-            // TODO: Add your own signing config for the release build.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
+            isDebuggable = false
         }
     }
     

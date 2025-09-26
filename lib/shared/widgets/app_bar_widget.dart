@@ -12,6 +12,7 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
   final List<Color>? gradientColors;
   final bool centerTitle;
   final double elevation;
+  final bool showLogo;
 
   const AppBarWidget({
     super.key,
@@ -24,6 +25,7 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
     this.gradientColors,
     this.centerTitle = true,
     this.elevation = 0,
+    this.showLogo = false,
   });
 
   @override
@@ -48,13 +50,53 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
             : null,
       ),
       child: AppBar(
-        title: Text(
-          title,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        title: showLogo
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Hero(
+                    tag: 'app_logo',
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.2),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.asset(
+                          'assets/images/oscar.png',
+                          width: 32,
+                          height: 32,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              )
+            : Text(
+                title,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         elevation: 0,

@@ -1,4 +1,5 @@
 import '../../domain/entities/duty_check.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class DutyCheckModel {
   final String id;
@@ -39,7 +40,7 @@ class DutyCheckModel {
       dutyPersonId: json['dutyPersonId'] as String,
       dutyPersonName: json['dutyPersonName'] as String,
       dutyPersonRole: json['dutyPersonRole'] as String,
-      checkDate: DateTime.parse(json['checkDate'] as String),
+      checkDate: _parseTimestamp(json['checkDate'])!,
       status: json['status'] as String,
       isOnPhone: json['isOnPhone'] as bool,
       isWearingVest: json['isWearingVest'] as bool,
@@ -47,13 +48,25 @@ class DutyCheckModel {
       notes: json['notes'] as String?,
       checkedBy: json['checkedBy'] as String,
       checkedByName: json['checkedByName'] as String,
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'] as String)
-          : null,
-      updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'] as String)
-          : null,
+      createdAt: _parseTimestamp(json['createdAt']),
+      updatedAt: _parseTimestamp(json['updatedAt']),
     );
+  }
+
+  /// Helper method to parse timestamps from Firestore
+  /// Handles both Timestamp objects and ISO string formats
+  static DateTime? _parseTimestamp(dynamic timestamp) {
+    if (timestamp == null) return null;
+
+    if (timestamp is Timestamp) {
+      return timestamp.toDate();
+    } else if (timestamp is String) {
+      return DateTime.parse(timestamp);
+    } else if (timestamp is DateTime) {
+      return timestamp;
+    }
+
+    return null;
   }
 
   Map<String, dynamic> toJson() {

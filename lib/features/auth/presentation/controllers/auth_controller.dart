@@ -74,12 +74,15 @@ class AuthController extends _$AuthController {
 
   Future<void> initializeAuth() async {
     try {
+      print('🔐 [AUTH] Starting authentication initialization...');
       // Set loading state
       state = state.copyWith(isLoading: true, errorMessage: null);
 
       _listenToAuthChanges();
       await _checkCurrentUser();
+      print('🔐 [AUTH] Authentication initialization completed');
     } catch (e) {
+      print('🔐 [AUTH] Authentication initialization failed: $e');
       // Handle Firebase/network errors gracefully
       if (!ref.mounted) return;
       state = state.copyWith(
@@ -92,6 +95,7 @@ class AuthController extends _$AuthController {
 
   Future<void> _checkCurrentUser() async {
     try {
+      print('🔐 [AUTH] Checking current user...');
       final result = await _authRepository.getCurrentUser();
 
       // Check if provider is still mounted before updating state
@@ -100,6 +104,7 @@ class AuthController extends _$AuthController {
       result.when(
         success: (user) {
           if (!ref.mounted) return;
+          print('🔐 [AUTH] Current user check result: ${user != null ? "User found (${user.role})" : "No user"}');
           state = state.copyWith(
             isLoggedIn: user != null,
             user: user,
@@ -108,6 +113,7 @@ class AuthController extends _$AuthController {
         },
         failure: (failure) {
           if (!ref.mounted) return;
+          print('🔐 [AUTH] Current user check failed: ${failure.toString()}');
           state = state.copyWith(
             isLoading: false,
             errorMessage: _getErrorMessage(failure),
@@ -115,6 +121,7 @@ class AuthController extends _$AuthController {
         },
       );
     } catch (e) {
+      print('🔐 [AUTH] Current user check exception: $e');
       // Handle Firebase not available or other critical errors
       if (!ref.mounted) return;
       state = state.copyWith(

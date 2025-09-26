@@ -297,13 +297,6 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Generate a report to view data',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
-            ),
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _generateReport,

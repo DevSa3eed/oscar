@@ -205,11 +205,25 @@ class _DutyAssignmentPageState extends ConsumerState<DutyAssignmentPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Personnel Assignment',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Personnel Assignment',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            ElevatedButton.icon(
+              onPressed: _showAddPersonDialog,
+              icon: const Icon(Icons.person_add),
+              label: const Text('Add Personnel'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: theme.colorScheme.onPrimary,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 12),
         Container(
@@ -276,14 +290,6 @@ class _DutyAssignmentPageState extends ConsumerState<DutyAssignmentPage> {
               style: theme.textTheme.titleMedium?.copyWith(
                 color: theme.colorScheme.primary,
                 fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Add your first team member to get started',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
               textAlign: TextAlign.center,
             ),
@@ -373,25 +379,63 @@ class _DutyAssignmentPageState extends ConsumerState<DutyAssignmentPage> {
                     ],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: statusColor.withValues(alpha: 0.3),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: statusColor.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Text(
+                        isAssigned ? 'Assigned' : 'Unassigned',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: statusColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
-                  ),
-                  child: Text(
-                    isAssigned ? 'Assigned' : 'Unassigned',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: statusColor,
-                      fontWeight: FontWeight.bold,
+                    const SizedBox(width: 8),
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'delete') {
+                          _showDeletePersonDialog(dutyPerson);
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete, color: Colors.red),
+                              SizedBox(width: 8),
+                              Text('Delete Personnel'),
+                            ],
+                          ),
+                        ),
+                      ],
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.outline.withValues(
+                            alpha: 0.1,
+                          ),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Icon(
+                          Icons.more_vert,
+                          size: 16,
+                          color: theme.colorScheme.outline,
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),
@@ -876,6 +920,63 @@ class _DutyAssignmentPageState extends ConsumerState<DutyAssignmentPage> {
               }
             },
             child: const Text('Add Personnel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeletePersonDialog(DutyPerson dutyPerson) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Personnel'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Are you sure you want to delete this personnel?'),
+            const SizedBox(height: 8),
+            Text(
+              'Name: ${dutyPerson.name}',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            Text('Role: ${dutyPerson.role}'),
+            Text('Email: ${dutyPerson.email}'),
+            const SizedBox(height: 8),
+            Text(
+              'This action cannot be undone.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.error,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              ref
+                  .read(dutyControllerProvider.notifier)
+                  .deleteDutyPerson(dutyPerson.id);
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('${dutyPerson.name} has been deleted'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
           ),
         ],
       ),

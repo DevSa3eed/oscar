@@ -19,28 +19,81 @@ class _HodDashboardPageState extends ConsumerState<HodDashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    final reportsState = ref.watch(reportsControllerProvider);
+    try {
+      print('📊 [HOD_DASHBOARD] Building HodDashboardPage');
+      final reportsState = ref.watch(reportsControllerProvider);
+      print(
+        '📊 [HOD_DASHBOARD] Reports state: isLoading=${reportsState.isLoading}, error=${reportsState.errorMessage}',
+      );
 
-    // Initialize reports controller on first build only
-    if (!_isInitialized) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!_isInitialized) {
-          _isInitialized = true;
-          ref.read(reportsControllerProvider.notifier).loadDashboardData();
-        }
-      });
+      // Initialize reports controller on first build only
+      if (!_isInitialized) {
+        print('📊 [HOD_DASHBOARD] Initializing reports controller...');
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!_isInitialized) {
+            _isInitialized = true;
+            print('📊 [HOD_DASHBOARD] Calling loadDashboardData...');
+            ref.read(reportsControllerProvider.notifier).loadDashboardData();
+          }
+        });
+      }
+
+      return AppNavigation(
+        currentRoute: '/hod-dashboard',
+        child: SafeArea(
+          child: reportsState.isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : reportsState.errorMessage != null
+              ? _buildErrorState(context, reportsState.errorMessage!)
+              : _buildDashboardContent(context, reportsState),
+        ),
+      );
+    } catch (e, stackTrace) {
+      print('📊 [HOD_DASHBOARD] CRITICAL ERROR building HodDashboardPage: $e');
+      print('📊 [HOD_DASHBOARD] Stack trace: $stackTrace');
+      print('📊 [HOD_DASHBOARD] Error type: ${e.runtimeType}');
+
+      return Scaffold(
+        backgroundColor: Colors.red.shade100,
+        appBar: AppBar(
+          title: const Text('HOD Dashboard Error'),
+          backgroundColor: Colors.red,
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.error, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              const Text(
+                'HodDashboardPage Build Error:',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text('Error: $e'),
+              const SizedBox(height: 16),
+              const Text(
+                'Stack Trace:',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                stackTrace.toString(),
+                style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {});
+                },
+                child: const Text('Retry Build'),
+              ),
+            ],
+          ),
+        ),
+      );
     }
-
-    return AppNavigation(
-      currentRoute: '/hod-dashboard',
-      child: SafeArea(
-        child: reportsState.isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : reportsState.errorMessage != null
-            ? _buildErrorState(context, reportsState.errorMessage!)
-            : _buildDashboardContent(context, reportsState),
-      ),
-    );
   }
 
   Widget _buildErrorState(BuildContext context, String errorMessage) {
@@ -74,7 +127,10 @@ class _HodDashboardPageState extends ConsumerState<HodDashboardPage> {
     );
   }
 
-  Widget _buildDashboardContent(BuildContext context, reportsState) {
+  Widget _buildDashboardContent(
+    BuildContext context,
+    ReportsState reportsState,
+  ) {
     final theme = Theme.of(context);
 
     return SingleChildScrollView(
@@ -95,7 +151,11 @@ class _HodDashboardPageState extends ConsumerState<HodDashboardPage> {
     );
   }
 
-  Widget _buildStatsRow(BuildContext context, ThemeData theme, reportsState) {
+  Widget _buildStatsRow(
+    BuildContext context,
+    ThemeData theme,
+    ReportsState reportsState,
+  ) {
     return Row(
       children: [
         Expanded(
@@ -172,7 +232,7 @@ class _HodDashboardPageState extends ConsumerState<HodDashboardPage> {
   Widget _buildIssuesSection(
     BuildContext context,
     ThemeData theme,
-    reportsState,
+    ReportsState reportsState,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

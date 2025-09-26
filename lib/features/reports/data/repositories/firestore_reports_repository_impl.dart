@@ -139,25 +139,20 @@ class FirestoreReportsRepositoryImpl implements ReportsRepository {
       0,
       (sum, r) => sum + r.absentCount,
     );
-    final totalPhoneIssues = dailyReports.fold(
-      0,
-      (sum, r) => sum + r.issuesCount,
-    );
-    final totalVestIssues = dailyReports.fold(
-      0,
-      (sum, r) => sum + r.issuesCount,
-    );
-    final totalPunctualityIssues = dailyReports.fold(
-      0,
-      (sum, r) => sum + r.issuesCount,
-    );
-    final totalIssues =
-        totalPhoneIssues + totalVestIssues + totalPunctualityIssues;
+    final totalIssues = dailyReports.fold(0, (sum, r) => sum + r.issuesCount);
 
     final avgCompliance = dailyReports.isNotEmpty
         ? dailyReports.fold(0.0, (sum, r) => sum + r.compliancePercentage) /
               dailyReports.length
         : 0.0;
+
+    // Aggregate issues from daily reports
+    final aggregatedIssues = <DutyIssue>[];
+    for (final dailyReport in dailyReports) {
+      for (final issue in dailyReport.issues) {
+        aggregatedIssues.add(issue.toEntity());
+      }
+    }
 
     return DutyReport(
       id: '',
@@ -167,7 +162,7 @@ class FirestoreReportsRepositoryImpl implements ReportsRepository {
       absentCount: totalAbsentPersons,
       issuesCount: totalIssues,
       compliancePercentage: avgCompliance.toDouble(),
-      issues: [], // TODO: Aggregate issues from daily reports
+      issues: aggregatedIssues,
       generatedBy: 'system',
       createdAt: DateTime.now(),
     );
@@ -198,6 +193,14 @@ class FirestoreReportsRepositoryImpl implements ReportsRepository {
               dailyReports.length
         : 0.0;
 
+    // Aggregate issues from daily reports
+    final aggregatedIssues = <DutyIssue>[];
+    for (final dailyReport in dailyReports) {
+      for (final issue in dailyReport.issues) {
+        aggregatedIssues.add(issue.toEntity());
+      }
+    }
+
     return DutyReport(
       id: '',
       reportDate: DateTime(year, month, 1),
@@ -206,7 +209,7 @@ class FirestoreReportsRepositoryImpl implements ReportsRepository {
       absentCount: totalAbsentPersons,
       issuesCount: totalIssues,
       compliancePercentage: avgCompliance.toDouble(),
-      issues: [], // TODO: Aggregate issues from daily reports
+      issues: aggregatedIssues,
       generatedBy: 'system',
       createdAt: DateTime.now(),
     );

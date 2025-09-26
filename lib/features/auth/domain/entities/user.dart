@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class User {
   final String id;
   final String email;
@@ -29,16 +31,26 @@ class User {
       role: json['role'] as String,
       photoUrl: json['photoUrl'] as String?,
       isActive: json['isActive'] as bool? ?? false,
-      lastLoginAt: json['lastLoginAt'] != null
-          ? DateTime.parse(json['lastLoginAt'] as String)
-          : null,
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'] as String)
-          : null,
-      updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'] as String)
-          : null,
+      lastLoginAt: _parseTimestamp(json['lastLoginAt']),
+      createdAt: _parseTimestamp(json['createdAt']),
+      updatedAt: _parseTimestamp(json['updatedAt']),
     );
+  }
+
+  /// Helper method to parse timestamps from Firestore
+  /// Handles both Timestamp objects and ISO string formats
+  static DateTime? _parseTimestamp(dynamic timestamp) {
+    if (timestamp == null) return null;
+
+    if (timestamp is Timestamp) {
+      return timestamp.toDate();
+    } else if (timestamp is String) {
+      return DateTime.parse(timestamp);
+    } else if (timestamp is DateTime) {
+      return timestamp;
+    }
+
+    return null;
   }
 
   Map<String, dynamic> toJson() {

@@ -20,13 +20,21 @@ class AppNavigation extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    print(
+      '🧭 [APP_NAVIGATION] Building AppNavigation for route: $currentRoute',
+    );
     final authState = ref.watch(authControllerProvider);
     final user = authState.user;
+    print(
+      '🧭 [APP_NAVIGATION] User: ${user != null ? "${user.name} (${user.role})" : "null"}',
+    );
 
     if (user == null) {
+      print('🧭 [APP_NAVIGATION] No user, returning child without navigation');
       return child; // No navigation for unauthenticated users
     }
 
+    print('🧭 [APP_NAVIGATION] Building Scaffold with AppBar and BottomNav');
     return Scaffold(
       appBar: _buildUniversalAppBar(context, ref, user),
       body: child,
@@ -46,6 +54,7 @@ class AppNavigation extends ConsumerWidget {
       title: title,
       showBackButton: false, // No back buttons anywhere
       actions: actions,
+      showLogo: _shouldShowLogo(currentRoute),
     );
   }
 
@@ -54,7 +63,7 @@ class AppNavigation extends ConsumerWidget {
     if (route.contains('profile')) return 'Profile';
     if (route.contains('hod-dashboard')) return 'HOD Dashboard';
     if (route.contains('duty-assignment')) return 'Duty Assignments';
-    if (route.contains('location-management')) return 'Location Management';
+    if (route.contains('location-management')) return 'Locations';
     if (route.contains('reports')) return 'Reports';
     if (route.contains('reminder-email')) return 'Send Reminders';
     if (route.contains('duty-check')) return 'Duty Check';
@@ -65,6 +74,11 @@ class AppNavigation extends ConsumerWidget {
     } else {
       return 'HOD Dashboard';
     }
+  }
+
+  bool _shouldShowLogo(String route) {
+    // Show logo on main dashboard pages for Hero transition
+    return route.contains('supervisor-home') || route.contains('hod-dashboard');
   }
 
   List<Widget> _getAppBarActions(

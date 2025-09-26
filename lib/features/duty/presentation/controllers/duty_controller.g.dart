@@ -41,7 +41,7 @@ final class DutyControllerProvider
   }
 }
 
-String _$dutyControllerHash() => r'2d3e5ac77e63175927fc620c6b06b95ed90b29a3';
+String _$dutyControllerHash() => r'81f6a0abeca3bd4d05d486949f3c156c873e502c';
 
 abstract class _$DutyController extends $Notifier<DutyState> {
   DutyState build();

@@ -99,24 +99,11 @@ class _LocationManagementPageState
           Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Location Management',
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Manage duty locations for personnel assignments',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withValues(alpha: 0.7),
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  'Locations',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               ElevatedButton.icon(
@@ -238,16 +225,6 @@ class _LocationManagementPageState
               ).colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Add your first location to start managing duty assignments',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurface.withValues(alpha: 0.5),
-            ),
-            textAlign: TextAlign.center,
-          ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: () => _showAddLocationDialog(),
@@ -342,20 +319,6 @@ class _LocationManagementPageState
                       ),
                     ],
                   ),
-                  if (location.description != null &&
-                      location.description!.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      location.description!,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withValues(alpha: 0.6),
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
                 ],
               ),
             ),
@@ -446,7 +409,6 @@ class _LocationManagementPageState
   void _showAddLocationDialog() {
     final nameController = TextEditingController();
     final typeController = TextEditingController();
-    final descriptionController = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
     showDialog(
@@ -498,16 +460,13 @@ class _LocationManagementPageState
                 ),
                 const SizedBox(height: 16),
 
-                // Description Field
-                TextFormField(
-                  controller: descriptionController,
-                  decoration: const InputDecoration(
-                    labelText: 'Description (Optional)',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.description),
-                    hintText: 'Brief description of the location',
-                  ),
-                  maxLines: 3,
+                // Active Status
+                SwitchListTile(
+                  title: const Text('Active'),
+                  value: true,
+                  onChanged: (value) {
+                    // This will be handled in the save action
+                  },
                 ),
               ],
             ),
@@ -526,9 +485,6 @@ class _LocationManagementPageState
                     .addLocation(
                       name: nameController.text.trim(),
                       type: typeController.text.trim(),
-                      description: descriptionController.text.trim().isEmpty
-                          ? null
-                          : descriptionController.text.trim(),
                     );
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -549,9 +505,6 @@ class _LocationManagementPageState
   void _showEditLocationDialog(Location location) {
     final nameController = TextEditingController(text: location.name);
     final typeController = TextEditingController(text: location.type);
-    final descriptionController = TextEditingController(
-      text: location.description ?? '',
-    );
     final formKey = GlobalKey<FormState>();
 
     showDialog(
@@ -601,22 +554,9 @@ class _LocationManagementPageState
                 ),
                 const SizedBox(height: 16),
 
-                // Description Field
-                TextFormField(
-                  controller: descriptionController,
-                  decoration: const InputDecoration(
-                    labelText: 'Description (Optional)',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.description),
-                  ),
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 16),
-
                 // Active Status
                 SwitchListTile(
                   title: const Text('Active'),
-                  subtitle: const Text('Inactive locations cannot be assigned'),
                   value: location.isActive,
                   onChanged: (value) {
                     // This will be handled in the save action
@@ -637,9 +577,6 @@ class _LocationManagementPageState
                 final updatedLocation = location.copyWith(
                   name: nameController.text.trim(),
                   type: typeController.text.trim(),
-                  description: descriptionController.text.trim().isEmpty
-                      ? null
-                      : descriptionController.text.trim(),
                   updatedAt: DateTime.now(),
                 );
 

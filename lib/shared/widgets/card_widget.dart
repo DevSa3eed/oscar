@@ -124,16 +124,6 @@ class StatCard extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          if (subtitle != null) ...[
-            const SizedBox(height: 2),
-            Text(
-              subtitle!,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: cardColor.withValues(alpha: 0.6),
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
         ],
       ),
     );
@@ -143,7 +133,7 @@ class StatCard extends StatelessWidget {
 /// Modern action card for quick actions
 class ActionCard extends StatelessWidget {
   final String title;
-  final String subtitle;
+  final String? subtitle;
   final IconData icon;
   final Color? color;
   final VoidCallback onTap;
@@ -151,7 +141,7 @@ class ActionCard extends StatelessWidget {
   const ActionCard({
     super.key,
     required this.title,
-    required this.subtitle,
+    this.subtitle,
     required this.icon,
     this.color,
     required this.onTap,
@@ -185,17 +175,6 @@ class ActionCard extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                if (subtitle.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
-                  ),
-                ],
               ],
             ),
           ),

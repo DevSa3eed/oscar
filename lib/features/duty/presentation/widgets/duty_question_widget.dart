@@ -110,18 +110,6 @@ class DutyQuestionWidget extends StatelessWidget {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 8),
-
-                  // Description
-                  Text(
-                    question.description,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
                   const SizedBox(height: 24),
 
                   // Yes/No Buttons

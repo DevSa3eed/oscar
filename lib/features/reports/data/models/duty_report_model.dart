@@ -1,4 +1,18 @@
 import '../../domain/entities/duty_report.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+// Parses Firestore Timestamp/String/DateTime into DateTime
+DateTime? _parseFirestoreTimestamp(dynamic timestamp) {
+  if (timestamp == null) return null;
+  if (timestamp is Timestamp) {
+    return timestamp.toDate();
+  } else if (timestamp is String) {
+    return DateTime.parse(timestamp);
+  } else if (timestamp is DateTime) {
+    return timestamp;
+  }
+  return null;
+}
 
 class DutyReportModel {
   final String id;
@@ -28,7 +42,7 @@ class DutyReportModel {
   factory DutyReportModel.fromJson(Map<String, dynamic> json) {
     return DutyReportModel(
       id: json['id'] as String,
-      reportDate: DateTime.parse(json['reportDate'] as String),
+      reportDate: _parseFirestoreTimestamp(json['reportDate'])!,
       totalDutyPersons: json['totalDutyPersons'] as int,
       presentCount: json['presentCount'] as int,
       absentCount: json['absentCount'] as int,
@@ -38,9 +52,7 @@ class DutyReportModel {
           .map((e) => DutyIssueModel.fromJson(e as Map<String, dynamic>))
           .toList(),
       generatedBy: json['generatedBy'] as String,
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'] as String)
-          : null,
+      createdAt: _parseFirestoreTimestamp(json['createdAt']),
     );
   }
 
@@ -157,7 +169,7 @@ class DutyIssueModel {
       issues: (json['issues'] as List<dynamic>)
           .map((e) => e as String)
           .toList(),
-      checkDate: DateTime.parse(json['checkDate'] as String),
+      checkDate: _parseFirestoreTimestamp(json['checkDate'])!,
       checkedBy: json['checkedBy'] as String,
     );
   }

@@ -14,6 +14,7 @@ import '../../features/auth/presentation/pages/profile_page.dart';
 import '../../features/duty/domain/entities/duty_person.dart';
 import '../../features/reports/domain/entities/duty_report.dart';
 import '../navigation/auth_guard.dart';
+import '../navigation/shared_axis_transition.dart';
 
 part 'app_router.gr.dart';
 
@@ -21,49 +22,83 @@ part 'app_router.gr.dart';
 class AppRouter extends RootStackRouter {
   @override
   List<AutoRoute> get routes => [
-    // Splash screen (initial route)
+    // Splash screen (initial route) - no transition needed
     AutoRoute(page: SplashRoute.page, path: '/splash', initial: true),
 
     // Public auth routes (no authentication required)
-    AutoRoute(page: LoginRoute.page, path: '/login'),
-    AutoRoute(page: RegisterRoute.page, path: '/register'),
+    CustomRoute(
+      page: LoginRoute.page,
+      path: '/login',
+      transitionsBuilder: sharedAxisTransition,
+      duration: const Duration(milliseconds: 280),
+    ),
+    CustomRoute(
+      page: RegisterRoute.page,
+      path: '/register',
+      transitionsBuilder: sharedAxisTransition,
+      duration: const Duration(milliseconds: 280),
+    ),
 
     // Protected routes (require authentication)
-    AutoRoute(
+    CustomRoute(
       page: SupervisorHomeRoute.page,
       path: '/supervisor-home',
       guards: [AuthGuard()],
+      transitionsBuilder: sharedAxisTransition,
+      duration: const Duration(milliseconds: 280),
     ),
-    AutoRoute(
+    CustomRoute(
       page: DutyCheckRoute.page,
       path: '/duty-check',
       guards: [AuthGuard()],
+      transitionsBuilder: sharedAxisTransition,
+      duration: const Duration(milliseconds: 280),
     ),
 
     // HOD routes (require authentication)
-    AutoRoute(
+    CustomRoute(
       page: HodDashboardRoute.page,
       path: '/hod-dashboard',
       guards: [AuthGuard()],
+      transitionsBuilder: sharedAxisTransition,
+      duration: const Duration(milliseconds: 280),
     ),
-    AutoRoute(
+    CustomRoute(
       page: DutyAssignmentRoute.page,
       path: '/duty-assignment',
       guards: [AuthGuard()],
+      transitionsBuilder: sharedAxisTransition,
+      duration: const Duration(milliseconds: 280),
     ),
-    AutoRoute(
+    CustomRoute(
       page: LocationManagementRoute.page,
       path: '/location-management',
       guards: [AuthGuard()],
+      transitionsBuilder: sharedAxisTransition,
+      duration: const Duration(milliseconds: 280),
     ),
-    AutoRoute(page: ReportsRoute.page, path: '/reports', guards: [AuthGuard()]),
-    AutoRoute(
+    CustomRoute(
+      page: ReportsRoute.page,
+      path: '/reports',
+      guards: [AuthGuard()],
+      transitionsBuilder: sharedAxisTransition,
+      duration: const Duration(milliseconds: 280),
+    ),
+    CustomRoute(
       page: ReminderEmailRoute.page,
       path: '/reminder-email',
       guards: [AuthGuard()],
+      transitionsBuilder: sharedAxisTransition,
+      duration: const Duration(milliseconds: 280),
     ),
 
     // Profile route (require authentication)
-    AutoRoute(page: ProfileRoute.page, path: '/profile', guards: [AuthGuard()]),
+    CustomRoute(
+      page: ProfileRoute.page,
+      path: '/profile',
+      guards: [AuthGuard()],
+      transitionsBuilder: sharedAxisTransition,
+      duration: const Duration(milliseconds: 280),
+    ),
   ];
 }

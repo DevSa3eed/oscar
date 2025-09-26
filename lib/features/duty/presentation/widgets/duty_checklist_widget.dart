@@ -211,15 +211,6 @@ class _DutyChecklistWidgetState extends State<DutyChecklistWidget> {
                                       : null,
                                 ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            item.description,
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurface
-                                      .withValues(alpha: 0.7),
-                                ),
-                          ),
                         ],
                       ),
                     ),
