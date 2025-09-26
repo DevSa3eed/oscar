@@ -106,10 +106,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               ).colorScheme.primary.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(16),
                             ),
-                            child: Icon(
-                              Icons.security,
-                              size: 48,
-                              color: Theme.of(context).colorScheme.primary,
+                            child: Image.asset(
+                              'assets/images/oscar.png',
+                              width: 48,
+                              height: 48,
+                              fit: BoxFit.contain,
                             ),
                           ),
                           const SizedBox(height: 16),

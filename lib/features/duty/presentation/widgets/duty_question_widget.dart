@@ -23,7 +23,14 @@ class DutyQuestion {
   });
 }
 
-enum DutyQuestionState { initial, present, absent, alertAndVigilant, hasIssues }
+enum DutyQuestionState {
+  initial,
+  present,
+  absent,
+  alertAndVigilant,
+  hasIssues,
+  completed,
+}
 
 class DutyQuestionWidget extends StatelessWidget {
   final DutyQuestion question;

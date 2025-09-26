@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import '../controllers/reports_controller.dart';
 import '../../../../core/navigation/app_navigation.dart';
 import '../../../../shared/widgets/microsoft_card.dart';
+import '../../../../shared/services/report_share_service.dart';
+import '../../domain/entities/duty_report.dart';
 
 @RoutePage()
 class ReportsPage extends ConsumerStatefulWidget {
@@ -551,31 +553,59 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
     );
   }
 
-  Widget _buildReportActions(BuildContext context, ThemeData theme, report) {
-    return Row(
-      children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () => _exportReport(report),
-            icon: const Icon(Icons.file_download, size: 16),
-            label: const Text('Export PDF'),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: FilledButton.icon(
-            onPressed: () => _shareReport(report),
-            icon: const Icon(Icons.share, size: 16),
-            label: const Text('Share Report'),
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            ),
-          ),
-        ),
-      ],
+  Widget _buildReportActions(
+    BuildContext context,
+    ThemeData theme,
+    DutyReport report,
+  ) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth > 600;
+
+        if (isWide) {
+          // Wide layout - single share button
+          return Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: () => _showShareOptions(context, report),
+                  icon: const Icon(Icons.share, size: 16),
+                  label: const Text('Share Report'),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        } else {
+          // Narrow layout - single share button
+          return Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: () => _showShareOptions(context, report),
+                      icon: const Icon(Icons.share, size: 16),
+                      label: const Text('Share Report'),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        }
+      },
     );
   }
 
@@ -806,66 +836,260 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
     }
   }
 
-  void _exportReport(dynamic report) {
-    // Show a snackbar for now - actual PDF generation would require additional packages
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Export functionality coming soon'),
-        action: SnackBarAction(
-          label: 'OK',
-          onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
-        ),
+  /// Show share options dialog
+  void _showShareOptions(BuildContext context, DutyReport report) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => _ShareOptionsBottomSheet(
+        report: report,
+        dateRange: _getReportDateRange(),
       ),
     );
   }
+}
 
-  void _shareReport(dynamic report) {
-    // Create a shareable text summary
-    final reportText = _createReportSummary(report);
+/// Bottom sheet widget for share options
+class _ShareOptionsBottomSheet extends StatelessWidget {
+  final DutyReport report;
+  final String dateRange;
 
-    // Show share dialog or use share package
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Share Report'),
-        content: SingleChildScrollView(child: Text(reportText)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+  const _ShareOptionsBottomSheet({
+    required this.report,
+    required this.dateRange,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Handle bar
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
           ),
-          FilledButton(
-            onPressed: () {
-              // Copy to clipboard
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Report copied to clipboard')),
-              );
-            },
-            child: const Text('Copy'),
+          const SizedBox(height: 24),
+
+          // Title
+          Text(
+            'Share Report',
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            dateRange,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Share options
+          _buildShareOption(
+            context,
+            icon: Icons.text_fields,
+            title: 'Share as Text',
+            subtitle: 'Share report summary as text',
+            onTap: () => _shareAsText(context),
+          ),
+          const SizedBox(height: 12),
+          _buildShareOption(
+            context,
+            icon: Icons.picture_as_pdf,
+            title: 'Share as PDF',
+            subtitle: 'Generate and share PDF document',
+            onTap: () => _shareAsPdf(context),
+          ),
+          const SizedBox(height: 12),
+          _buildShareOption(
+            context,
+            icon: Icons.table_chart,
+            title: 'Share as Excel',
+            subtitle: 'Generate and share Excel spreadsheet',
+            onTap: () => _shareAsExcel(context),
+          ),
+          const SizedBox(height: 24),
+
+          // Close button
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
           ),
         ],
       ),
     );
   }
 
-  String _createReportSummary(dynamic report) {
-    final dateRange = _getReportDateRange();
-    return '''
-DUTY REPORT - $dateRange
+  Widget _buildShareOption(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
 
-SUMMARY:
-• Total Personnel: ${report.totalDutyPersons}
-• Present: ${report.presentCount}
-• Absent: ${report.absentCount}
-• Compliance Rate: ${report.compliancePercentage.toStringAsFixed(1)}%
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: theme.colorScheme.outline.withValues(alpha: 0.3),
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: theme.colorScheme.primary, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-${report.issues.isNotEmpty ? '''
-ISSUES (${report.issues.length}):
-${report.issues.map((issue) => '• ${issue.dutyPersonName} (${issue.dutyPersonRole}): ${issue.issues.join(', ')}').join('\n')}
-''' : 'No issues reported - All personnel are compliant.'}
+  Future<void> _shareAsText(BuildContext context) async {
+    Navigator.pop(context);
 
-Generated: ${DateFormat('MMM d, y \'at\' h:mm a').format(DateTime.now())}
-''';
+    try {
+      await ReportShareService.shareAsText(
+        report: report,
+        dateRange: dateRange,
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to share: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _shareAsPdf(BuildContext context) async {
+    final navigator = Navigator.of(context);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    navigator.pop();
+
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
+
+      await ReportShareService.shareAsPdf(report: report, dateRange: dateRange);
+
+      // Close loading dialog
+      if (context.mounted) navigator.pop();
+    } catch (e) {
+      // Close loading dialog
+      if (context.mounted) navigator.pop();
+
+      // Show error message
+      if (context.mounted) {
+        scaffoldMessenger.showSnackBar(
+          SnackBar(
+            content: Text('Failed to share PDF: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _shareAsExcel(BuildContext context) async {
+    final navigator = Navigator.of(context);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    navigator.pop();
+
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
+
+      await ReportShareService.shareAsExcel(
+        report: report,
+        dateRange: dateRange,
+      );
+
+      // Close loading dialog
+      if (context.mounted) navigator.pop();
+    } catch (e) {
+      // Close loading dialog
+      if (context.mounted) navigator.pop();
+
+      // Show error message
+      if (context.mounted) {
+        scaffoldMessenger.showSnackBar(
+          SnackBar(
+            content: Text('Failed to share Excel: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

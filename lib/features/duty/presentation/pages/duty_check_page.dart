@@ -13,8 +13,13 @@ import '../../../../core/navigation/app_navigation.dart';
 @RoutePage()
 class DutyCheckPage extends ConsumerStatefulWidget {
   final DutyPerson dutyPerson;
+  final DutyCheck? existingDutyCheck;
 
-  const DutyCheckPage({super.key, required this.dutyPerson});
+  const DutyCheckPage({
+    super.key,
+    required this.dutyPerson,
+    this.existingDutyCheck,
+  });
 
   @override
   ConsumerState<DutyCheckPage> createState() => _DutyCheckPageState();
@@ -68,6 +73,58 @@ class _DutyCheckPageState extends ConsumerState<DutyCheckPage> {
         nextStateNo: null, // End of flow
       ),
     ];
+
+    // Defer form population to avoid setState during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.existingDutyCheck != null) {
+        _populateFormWithExistingData(widget.existingDutyCheck!);
+      }
+    });
+  }
+
+  void _populateFormWithExistingData(DutyCheck existingCheck) {
+    print('🔍 Populating form with existing data:');
+    print('  - Status: ${existingCheck.status}');
+    print('  - Is wearing vest: ${existingCheck.isWearingVest}');
+    print('  - Is on phone: ${existingCheck.isOnPhone}');
+
+    setState(() {
+      _isPresent = existingCheck.status == AppConstants.presentStatus;
+      _isWearingVest = existingCheck.isWearingVest;
+      // For editing, infer alert state from existing data
+      // If person is present and NOT on phone, they're likely alert and vigilant
+      // If person is present but on phone, they're not alert
+      _isAlertAndVigilant = _isPresent && !existingCheck.isOnPhone;
+
+      print('  - Computed _isPresent: $_isPresent');
+      print('  - Computed _isWearingVest: $_isWearingVest');
+      print('  - Computed _isAlertAndVigilant: $_isAlertAndVigilant');
+      print('  - Existing isOnPhone: ${existingCheck.isOnPhone}');
+
+      // Set notes
+      _notesController.text = existingCheck.notes ?? '';
+
+      // Determine current state based on existing answers
+      // Set the state to match where the user left off in the flow
+      if (!_isPresent) {
+        // Person was marked absent - stay at initial state to allow changing to present
+        _currentState = DutyQuestionState.initial;
+      } else if (_isPresent && !_isAlertAndVigilant) {
+        // Person was present but not alert - stay at present state
+        _currentState = DutyQuestionState.present;
+      } else if (_isPresent && _isAlertAndVigilant) {
+        // Person was present and alert - go to vest question state
+        _currentState = DutyQuestionState.alertAndVigilant;
+      } else {
+        // Default to initial state
+        _currentState = DutyQuestionState.initial;
+      }
+
+      print('  - Computed _currentState: $_currentState');
+    });
+
+    // Don't force completion state - let the question flow widget determine it
+    // _allQuestionsCompleted will be set by the onCompletionChanged callback
   }
 
   @override
@@ -357,7 +414,11 @@ class _DutyCheckPageState extends ConsumerState<DutyCheckPage> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    _allQuestionsCompleted ? 'Save Check' : 'Answer Questions',
+                    _allQuestionsCompleted
+                        ? (widget.existingDutyCheck != null
+                              ? 'Update Check'
+                              : 'Save Check')
+                        : 'Answer Questions',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -451,33 +512,69 @@ class _DutyCheckPageState extends ConsumerState<DutyCheckPage> {
     });
 
     try {
+      final isEditing = widget.existingDutyCheck != null;
+
+      print('💾 Saving duty check:');
+      print('  - Is editing: $isEditing');
+      print('  - _isPresent: $_isPresent');
+      print('  - _isWearingVest: $_isWearingVest');
+      print('  - _isAlertAndVigilant: $_isAlertAndVigilant');
+      print('  - Notes: ${_notesController.text}');
+
       final dutyCheck = DutyCheck(
-        id: const Uuid().v4(),
+        id: isEditing ? widget.existingDutyCheck!.id : const Uuid().v4(),
         dutyPersonId: widget.dutyPerson.id,
         dutyPersonName: widget.dutyPerson.name,
         dutyPersonRole: widget.dutyPerson.role,
-        checkDate: DateTime.now(),
+        checkDate: isEditing
+            ? widget.existingDutyCheck!.checkDate
+            : DateTime.now(),
         status: _isPresent
             ? AppConstants.presentStatus
             : AppConstants.absentStatus,
-        isOnPhone: false, // Simplified - no specific issue tracking for now
+        isOnPhone:
+            !_isAlertAndVigilant, // Map alert/vigilant state to isOnPhone field
         isWearingVest: _isWearingVest, // Use actual vest check result
         isOnTime: _isPresent, // Assume on time if present
         notes: _notesController.text.trim().isEmpty
             ? null
             : _notesController.text.trim(),
-        checkedBy: 'current_user_id', // This should come from auth state
-        checkedByName: 'Current User', // This should come from auth state
-        createdAt: DateTime.now(),
+        checkedBy: isEditing
+            ? widget.existingDutyCheck!.checkedBy
+            : 'current_user_id',
+        checkedByName: isEditing
+            ? widget.existingDutyCheck!.checkedByName
+            : 'Current User',
+        createdAt: isEditing
+            ? widget.existingDutyCheck!.createdAt
+            : DateTime.now(),
         updatedAt: DateTime.now(),
       );
 
-      await ref.read(dutyControllerProvider.notifier).saveDutyCheck(dutyCheck);
+      print('  - Final duty check status: ${dutyCheck.status}');
+      print('  - Final duty check isWearingVest: ${dutyCheck.isWearingVest}');
+      print(
+        '  - Final duty check isOnPhone: ${dutyCheck.isOnPhone} (mapped from alert: $_isAlertAndVigilant)',
+      );
+
+      if (isEditing) {
+        await ref
+            .read(dutyControllerProvider.notifier)
+            .updateDutyCheck(dutyCheck);
+      } else {
+        await ref
+            .read(dutyControllerProvider.notifier)
+            .saveDutyCheck(dutyCheck);
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Duty check saved successfully'),
+          SnackBar(
+            content: Text(
+              isEditing
+                  ? 'Duty check updated successfully'
+                  : 'Duty check saved successfully',
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -487,7 +584,9 @@ class _DutyCheckPageState extends ConsumerState<DutyCheckPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to save duty check: $e'),
+            content: Text(
+              'Failed to ${widget.existingDutyCheck != null ? 'update' : 'save'} duty check: $e',
+            ),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );

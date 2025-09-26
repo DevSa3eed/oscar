@@ -32,10 +32,15 @@ class DutyCheckRoute extends PageRouteInfo<DutyCheckRouteArgs> {
   DutyCheckRoute({
     Key? key,
     required DutyPerson dutyPerson,
+    DutyCheck? existingDutyCheck,
     List<PageRouteInfo>? children,
   }) : super(
          DutyCheckRoute.name,
-         args: DutyCheckRouteArgs(key: key, dutyPerson: dutyPerson),
+         args: DutyCheckRouteArgs(
+           key: key,
+           dutyPerson: dutyPerson,
+           existingDutyCheck: existingDutyCheck,
+         ),
          initialChildren: children,
        );
 
@@ -45,32 +50,45 @@ class DutyCheckRoute extends PageRouteInfo<DutyCheckRouteArgs> {
     name,
     builder: (data) {
       final args = data.argsAs<DutyCheckRouteArgs>();
-      return DutyCheckPage(key: args.key, dutyPerson: args.dutyPerson);
+      return DutyCheckPage(
+        key: args.key,
+        dutyPerson: args.dutyPerson,
+        existingDutyCheck: args.existingDutyCheck,
+      );
     },
   );
 }
 
 class DutyCheckRouteArgs {
-  const DutyCheckRouteArgs({this.key, required this.dutyPerson});
+  const DutyCheckRouteArgs({
+    this.key,
+    required this.dutyPerson,
+    this.existingDutyCheck,
+  });
 
   final Key? key;
 
   final DutyPerson dutyPerson;
 
+  final DutyCheck? existingDutyCheck;
+
   @override
   String toString() {
-    return 'DutyCheckRouteArgs{key: $key, dutyPerson: $dutyPerson}';
+    return 'DutyCheckRouteArgs{key: $key, dutyPerson: $dutyPerson, existingDutyCheck: $existingDutyCheck}';
   }
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     if (other is! DutyCheckRouteArgs) return false;
-    return key == other.key && dutyPerson == other.dutyPerson;
+    return key == other.key &&
+        dutyPerson == other.dutyPerson &&
+        existingDutyCheck == other.existingDutyCheck;
   }
 
   @override
-  int get hashCode => key.hashCode ^ dutyPerson.hashCode;
+  int get hashCode =>
+      key.hashCode ^ dutyPerson.hashCode ^ existingDutyCheck.hashCode;
 }
 
 /// generated route for

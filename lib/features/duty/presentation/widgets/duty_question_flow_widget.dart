@@ -31,14 +31,28 @@ class _DutyQuestionFlowWidgetState extends State<DutyQuestionFlowWidget> {
   @override
   void initState() {
     super.initState();
-    // Only include answers that are actually answered (true), not false values
-    _answers = Map<String, bool>.fromEntries(
-      widget.initialAnswers.entries.where((entry) => entry.value == true),
-    );
+    // Include all initial answers (both true and false) to properly handle editing mode
+    _answers = Map<String, bool>.from(widget.initialAnswers);
+    print('🔄 DutyQuestionFlowWidget initState:');
+    print('  - Initial answers: $_answers');
+    print('  - Current state: ${widget.currentState}');
     // Defer the completion update to avoid setState during build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateCompletion();
     });
+  }
+
+  @override
+  void didUpdateWidget(DutyQuestionFlowWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Update answers if initial answers have changed (important for editing mode)
+    if (oldWidget.initialAnswers != widget.initialAnswers) {
+      _answers = Map<String, bool>.from(widget.initialAnswers);
+      // Defer completion update to avoid setState during build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _updateCompletion();
+      });
+    }
   }
 
   void _updateCompletion() {
@@ -66,6 +80,10 @@ class _DutyQuestionFlowWidgetState extends State<DutyQuestionFlowWidget> {
         // Vest question answered (true or false, but not null)
         isCompleted = _answers.containsKey('wearing_vest');
         break;
+      case DutyQuestionState.completed:
+        // All questions completed
+        isCompleted = true;
+        break;
     }
 
     widget.onCompletionChanged(isCompleted);
@@ -91,8 +109,9 @@ class _DutyQuestionFlowWidgetState extends State<DutyQuestionFlowWidget> {
     if (nextState != null) {
       widget.onStateChanged(nextState);
     } else {
-      // If no next state (final question), stay in current state but mark as completed
-      // This will make the question minimize since it's answered but not current
+      // If no next state (final question), transition to completed state
+      // This will cause the question to be minimized
+      widget.onStateChanged(DutyQuestionState.completed);
     }
 
     _updateCompletion();
@@ -105,15 +124,28 @@ class _DutyQuestionFlowWidgetState extends State<DutyQuestionFlowWidget> {
         final isCurrentQuestion = question.requiredState == widget.currentState;
         final isAnswered = _answers.containsKey(question.id);
         final answerValue = _answers[question.id];
+        final isFinalQuestion =
+            question.nextStateYes == null && question.nextStateNo == null;
+
+        print('📋 Question ${question.id}:');
+        print('  - Required state: ${question.requiredState}');
+        print('  - Current state: ${widget.currentState}');
+        print('  - Is current: $isCurrentQuestion');
+        print('  - Is answered: $isAnswered');
+        print('  - Answer value: $answerValue');
+        print('  - Next state yes: ${question.nextStateYes}');
+        print('  - Next state no: ${question.nextStateNo}');
+        print('  - Is final question: $isFinalQuestion');
 
         // Show question if it's the current question OR if it's been answered (minimized)
         // For final questions, if answered, show as minimized even if it's the current question
         final isVisible = isCurrentQuestion || isAnswered;
-        final shouldMinimize =
-            isAnswered &&
-            (!isCurrentQuestion ||
-                (question.nextStateYes == null &&
-                    question.nextStateNo == null));
+
+        // Minimize questions if they're answered and not the current question
+        // This applies to both regular and final questions
+        final shouldMinimize = isAnswered && !isCurrentQuestion;
+
+        print('  - Should minimize: $shouldMinimize');
 
         return DutyQuestionWidget(
           question: question,

@@ -12,6 +12,7 @@ import '../../features/reports/presentation/pages/reports_page.dart';
 import '../../features/reports/presentation/pages/reminder_email_page.dart';
 import '../../features/auth/presentation/pages/profile_page.dart';
 import '../../features/duty/domain/entities/duty_person.dart';
+import '../../features/duty/domain/entities/duty_check.dart';
 import '../../features/reports/domain/entities/duty_report.dart';
 import '../navigation/auth_guard.dart';
 import '../navigation/shared_axis_transition.dart';

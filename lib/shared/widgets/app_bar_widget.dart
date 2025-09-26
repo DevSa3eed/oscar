@@ -55,7 +55,7 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Hero(
-                    tag: 'app_logo',
+                    tag: 'app_bar_logo',
                     child: Container(
                       width: 32,
                       height: 32,

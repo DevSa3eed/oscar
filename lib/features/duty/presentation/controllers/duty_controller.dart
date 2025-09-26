@@ -128,11 +128,11 @@ class DutyController extends _$DutyController {
       final locationsResult = await _dutyRepository.getLocations();
       if (!ref.mounted) return;
 
+      // Process duty persons result
+      List<DutyPerson> dutyPersons = [];
       dutyPersonsResult.when(
-        success: (dutyPersons) {
-          if (!ref.mounted) return;
-
-          state = state.copyWith(dutyPersons: dutyPersons);
+        success: (persons) {
+          dutyPersons = persons;
         },
         failure: (failure) {
           if (!ref.mounted) return;
@@ -140,28 +140,108 @@ class DutyController extends _$DutyController {
         },
       );
 
+      // Process duty checks result
+      List<DutyCheck> dutyChecks = [];
       dutyChecksResult.when(
-        success: (dutyChecks) {
-          if (!ref.mounted) return;
-          final presentCount = dutyChecks
-              .where((check) => check.status == 'present')
-              .length;
-          final issuesCount = dutyChecks
-              .where((check) => check.isOnPhone || !check.isWearingVest)
-              .length;
-
-          state = state.copyWith(
-            dutyChecks: dutyChecks,
-            totalPersons: dutyPersonsResult.data?.length ?? 0,
-            presentCount: presentCount,
-            issuesCount: issuesCount,
-          );
+        success: (checks) {
+          dutyChecks = checks;
         },
         failure: (failure) {
           if (!ref.mounted) return;
           state = state.copyWith(errorMessage: _getErrorMessage(failure));
         },
       );
+
+      // Calculate counters only if both requests succeeded
+      if (dutyPersonsResult.isSuccess && dutyChecksResult.isSuccess) {
+        // Filter duty checks to only include today's checks
+        final today = DateTime.now();
+        final todayChecks = dutyChecks.where((check) {
+          final checkDate = check.checkDate;
+          return checkDate.year == today.year &&
+              checkDate.month == today.month &&
+              checkDate.day == today.day;
+        }).toList();
+
+        // Get the latest check per person for today (in case of multiple checks)
+        final Map<String, DutyCheck> latestChecksPerPerson = {};
+        for (final check in todayChecks) {
+          if (!latestChecksPerPerson.containsKey(check.dutyPersonId)) {
+            latestChecksPerPerson[check.dutyPersonId] = check;
+          } else {
+            final existingCheck = latestChecksPerPerson[check.dutyPersonId]!;
+            final existingTime =
+                existingCheck.updatedAt ??
+                existingCheck.createdAt ??
+                existingCheck.checkDate;
+            final currentTime =
+                check.updatedAt ?? check.createdAt ?? check.checkDate;
+
+            if (currentTime.isAfter(existingTime)) {
+              latestChecksPerPerson[check.dutyPersonId] = check;
+            }
+          }
+        }
+        final latestChecks = latestChecksPerPerson.values.toList();
+
+        // Calculate present count - count all personnel who are either:
+        // 1. Checked as present today (latest check), OR
+        // 2. Not checked yet today (assume present by default)
+        final totalPersonnel = dutyPersons.length;
+        final checkedPresentCount = latestChecks
+            .where((check) => check.status == 'present')
+            .length;
+
+        // Calculate unchecked count more safely
+        // Only count personnel who don't have any checks today
+        final checkedPersonIds = latestChecks
+            .map((check) => check.dutyPersonId)
+            .toSet();
+        final uncheckedPersonIds = dutyPersons
+            .where((person) => !checkedPersonIds.contains(person.id))
+            .toList();
+        final uncheckedCount = uncheckedPersonIds.length;
+        final presentCount = checkedPresentCount + uncheckedCount;
+
+        // Debug logging
+        print('🔍 Counter Debug Info:');
+        print('  - Total Personnel: $totalPersonnel');
+        print('  - Total Duty Checks Count: ${dutyChecks.length}');
+        print('  - Today\'s Duty Checks Count: ${todayChecks.length}');
+        print('  - Latest Checks Count: ${latestChecks.length}');
+        print('  - Checked Present Count: $checkedPresentCount');
+        print('  - Unchecked Count: $uncheckedCount');
+        print('  - Final Present Count: $presentCount');
+        print('  - Duty Persons: ${dutyPersons.map((p) => p.name).toList()}');
+        print(
+          '  - Today\'s Duty Checks: ${todayChecks.map((c) => '${c.dutyPersonName}: ${c.status}').toList()}',
+        );
+        print(
+          '  - Latest Checks: ${latestChecks.map((c) => '${c.dutyPersonName}: ${c.status}').toList()}',
+        );
+        print('  - Checked Person IDs: $checkedPersonIds');
+        print(
+          '  - Unchecked Person IDs: ${uncheckedPersonIds.map((p) => p.id).toList()}',
+        );
+
+        // Calculate issues count - only count present personnel with actual issues
+        // Issues are: on phone OR not wearing vest (but only if they're present)
+        final issuesCount = latestChecks
+            .where(
+              (check) =>
+                  check.status == 'present' &&
+                  (check.isOnPhone || !check.isWearingVest),
+            )
+            .length;
+
+        state = state.copyWith(
+          dutyPersons: dutyPersons,
+          dutyChecks: dutyChecks,
+          totalPersons: totalPersonnel,
+          presentCount: presentCount,
+          issuesCount: issuesCount,
+        );
+      }
 
       locationsResult.when(
         success: (locations) {
@@ -188,6 +268,30 @@ class DutyController extends _$DutyController {
     state = state.copyWith(isLoading: true);
 
     final result = await _dutyRepository.saveDutyCheck(dutyCheck);
+
+    if (!ref.mounted) return;
+
+    result.when(
+      success: (_) async {
+        if (!ref.mounted) return;
+        // Wait for data refresh to complete
+        await loadDutyData();
+      },
+      failure: (failure) {
+        if (!ref.mounted) return;
+        state = state.copyWith(
+          isLoading: false,
+          errorMessage: _getErrorMessage(failure),
+        );
+      },
+    );
+  }
+
+  Future<void> updateDutyCheck(DutyCheck dutyCheck) async {
+    if (!ref.mounted) return;
+    state = state.copyWith(isLoading: true);
+
+    final result = await _dutyRepository.updateDutyCheck(dutyCheck);
 
     if (!ref.mounted) return;
 

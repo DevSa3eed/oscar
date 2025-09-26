@@ -6,6 +6,7 @@ import '../controllers/duty_controller.dart';
 import '../widgets/duty_person_card.dart';
 import '../../domain/entities/duty_check.dart';
 import '../../domain/entities/duty_person.dart';
+import '../../domain/entities/duty_assignment.dart';
 import '../../../../core/routes/app_router.dart';
 import '../../../../core/navigation/app_navigation.dart';
 
@@ -29,6 +30,7 @@ class _SupervisorHomePageState extends ConsumerState<SupervisorHomePage> {
     if (_isInitialized) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ref.read(dutyControllerProvider.notifier).loadDutyData();
+        ref.read(dutyControllerProvider.notifier).loadDutyAssignments();
       });
     }
   }
@@ -43,13 +45,20 @@ class _SupervisorHomePageState extends ConsumerState<SupervisorHomePage> {
         if (!_isInitialized) {
           _isInitialized = true;
           ref.read(dutyControllerProvider.notifier).loadDutyData();
+          ref.read(dutyControllerProvider.notifier).loadDutyAssignments();
         }
       });
     }
 
     // Filter and group duty persons by location
     final filteredDutyPersons = _filterDutyPersons(dutyState.dutyPersons);
-    final groupedDutyPersons = _groupDutyPersonsByLocation(filteredDutyPersons);
+    final dutyPersonsWithAssignments = _populateLocationAssignments(
+      filteredDutyPersons,
+      dutyState.dutyAssignments,
+    );
+    final groupedDutyPersons = _groupDutyPersonsByLocation(
+      dutyPersonsWithAssignments,
+    );
 
     return AppNavigation(
       currentRoute: '/supervisor-home',
@@ -335,6 +344,38 @@ class _SupervisorHomePageState extends ConsumerState<SupervisorHomePage> {
     );
   }
 
+  List<DutyPerson> _populateLocationAssignments(
+    List<DutyPerson> dutyPersons,
+    List<DutyAssignment> dutyAssignments,
+  ) {
+    // Create a map of person ID to their latest assignment
+    final Map<String, DutyAssignment> latestAssignments = {};
+
+    for (final assignment in dutyAssignments) {
+      if (assignment.isActive) {
+        if (!latestAssignments.containsKey(assignment.dutyPersonId) ||
+            assignment.assignedDate.isAfter(
+              latestAssignments[assignment.dutyPersonId]!.assignedDate,
+            )) {
+          latestAssignments[assignment.dutyPersonId] = assignment;
+        }
+      }
+    }
+
+    // Update duty persons with their location assignments
+    return dutyPersons.map((person) {
+      final assignment = latestAssignments[person.id];
+      if (assignment != null) {
+        return person.copyWith(
+          assignedLocationId: assignment.locationId,
+          assignedLocationName: assignment.locationName,
+          assignedLocationType: assignment.locationType,
+        );
+      }
+      return person;
+    }).toList();
+  }
+
   List<DutyPerson> _filterDutyPersons(List<DutyPerson> dutyPersons) {
     if (_selectedLocationFilter == 'All' && _selectedLocationType == 'All') {
       return dutyPersons;
@@ -511,7 +552,10 @@ class _SupervisorHomePageState extends ConsumerState<SupervisorHomePage> {
                     dutyPerson: dutyPerson,
                     dutyCheck: dutyCheck,
                     onTap: () => context.router.push(
-                      DutyCheckRoute(dutyPerson: dutyPerson),
+                      DutyCheckRoute(
+                        dutyPerson: dutyPerson,
+                        existingDutyCheck: existingCheck,
+                      ),
                     ),
                   ),
                 );

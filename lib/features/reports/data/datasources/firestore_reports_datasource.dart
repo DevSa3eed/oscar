@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/duty_report_model.dart';
 import '../../../duty/data/datasources/firestore_duty_datasource.dart';
+import '../../../duty/data/models/duty_check_model.dart';
 import '../../../../core/constants/app_constants.dart';
 
 abstract class FirestoreReportsDataSource {
@@ -97,20 +98,49 @@ class FirestoreReportsDataSourceImpl implements FirestoreReportsDataSource {
       final dutyChecks = await _dutyDataSource.getDutyChecksForDate(today);
       final dutyPersons = await _dutyDataSource.getDutyPersons();
 
+      // Filter duty checks to only include today's checks
+      final todayChecks = dutyChecks.where((check) {
+        final checkDate = check.checkDate;
+        return checkDate.year == today.year &&
+            checkDate.month == today.month &&
+            checkDate.day == today.day;
+      }).toList();
+
+      // Get the latest check per person for today (in case of multiple checks)
+      final Map<String, DutyCheckModel> latestChecksPerPerson = {};
+      for (final check in todayChecks) {
+        if (!latestChecksPerPerson.containsKey(check.dutyPersonId)) {
+          latestChecksPerPerson[check.dutyPersonId] = check;
+        } else {
+          final existingCheck = latestChecksPerPerson[check.dutyPersonId]!;
+          final existingTime =
+              existingCheck.updatedAt ??
+              existingCheck.createdAt ??
+              existingCheck.checkDate;
+          final currentTime =
+              check.updatedAt ?? check.createdAt ?? check.checkDate;
+
+          if (currentTime.isAfter(existingTime)) {
+            latestChecksPerPerson[check.dutyPersonId] = check;
+          }
+        }
+      }
+      final latestChecks = latestChecksPerPerson.values.toList();
+
       final totalPersons = dutyPersons.length;
-      final checkedPersons = dutyChecks.length;
-      final presentPersons = dutyChecks
+      final checkedPersons = latestChecks.length;
+      final presentPersons = latestChecks
           .where((check) => check.status == 'present')
           .length;
-      final absentPersons = dutyChecks
+      final absentPersons = latestChecks
           .where((check) => check.status == 'absent')
           .length;
 
-      final phoneIssues = dutyChecks.where((check) => check.isOnPhone).length;
-      final vestIssues = dutyChecks
+      final phoneIssues = latestChecks.where((check) => check.isOnPhone).length;
+      final vestIssues = latestChecks
           .where((check) => !check.isWearingVest)
           .length;
-      final punctualityIssues = dutyChecks
+      final punctualityIssues = latestChecks
           .where((check) => !check.isOnTime)
           .length;
 
@@ -119,9 +149,9 @@ class FirestoreReportsDataSourceImpl implements FirestoreReportsDataSource {
           ? ((checkedPersons - totalIssues) / checkedPersons * 100).round()
           : 0;
 
-      // Generate issues from duty checks with violations
+      // Generate issues from latest duty checks with violations
       final issues = <DutyIssueModel>[];
-      for (final check in dutyChecks) {
+      for (final check in latestChecks) {
         final personIssues = <String>[];
 
         if (check.isOnPhone) {
