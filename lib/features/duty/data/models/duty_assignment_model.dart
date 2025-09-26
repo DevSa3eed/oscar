@@ -84,15 +84,15 @@ class DutyAssignmentModel {
       'locationId': locationId,
       'locationName': locationName,
       'locationType': locationType,
-      'assignedDate': assignedDate.toIso8601String(),
-      'startTime': startTime?.toIso8601String(),
-      'endTime': endTime?.toIso8601String(),
+      'assignedDate': Timestamp.fromDate(assignedDate),
+      'startTime': startTime != null ? Timestamp.fromDate(startTime!) : null,
+      'endTime': endTime != null ? Timestamp.fromDate(endTime!) : null,
       'assignedBy': assignedBy,
       'assignedByName': assignedByName,
       'isActive': isActive,
       'notes': notes,
-      'createdAt': createdAt?.toIso8601String(),
-      'updatedAt': updatedAt?.toIso8601String(),
+      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
+      'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
     };
   }
 

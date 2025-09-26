@@ -75,7 +75,7 @@ class DutyCheckModel {
       'dutyPersonId': dutyPersonId,
       'dutyPersonName': dutyPersonName,
       'dutyPersonRole': dutyPersonRole,
-      'checkDate': checkDate.toIso8601String(),
+      'checkDate': Timestamp.fromDate(checkDate),
       'status': status,
       'isOnPhone': isOnPhone,
       'isWearingVest': isWearingVest,
@@ -83,8 +83,8 @@ class DutyCheckModel {
       'notes': notes,
       'checkedBy': checkedBy,
       'checkedByName': checkedByName,
-      'createdAt': createdAt?.toIso8601String(),
-      'updatedAt': updatedAt?.toIso8601String(),
+      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
+      'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
     };
   }
 
